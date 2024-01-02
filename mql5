@@ -1,0 +1,73 @@
+mql5
+//+------------------------------------------------------------------+
+//|                  Three EMA Trend Entry                            |
+//|                  Developer: Forex Robot Easy Team                 |
+//|                  Website: forexroboteasy.com                      |
+//+------------------------------------------------------------------+
+
+// Input parameters
+input int EMA200_Period = 200;
+input int EMA32_Period = 32;
+
+// Global variables
+int prevSwingHigh, prevSwingLow;
+bool buySignal, sellSignal;
+
+//+------------------------------------------------------------------+
+//|                          Initialization                          |
+//+------------------------------------------------------------------+
+void OnInit()
+{
+    // Set indicator buffers
+    SetIndexBuffer(0, buySignal);
+    SetIndexArrow(0, SYMBOL_ARROWUP);
+    SetIndexBuffer(1, sellSignal);
+    SetIndexArrow(1, SYMBOL_ARROWDOWN);
+
+    // Calculate previous swing high and low
+    prevSwingHigh = 0;
+    prevSwingLow = 0;
+}
+
+//+------------------------------------------------------------------+
+//|                         Trading Function                         |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+    // Calculate EMAs
+    double ema200 = iMA(NULL, 0, EMA200_Period, 0, MODE_EMA, PRICE_CLOSE, 0);
+    double ema32_close = iMA(NULL, 0, EMA32_Period, 0, MODE_EMA, PRICE_CLOSE, 0);
+    double ema32_high = iMA(NULL, 0, EMA32_Period, 0, MODE_EMA, PRICE_HIGH, 0);
+    double ema32_low = iMA(NULL, 0, EMA32_Period, 0, MODE_EMA, PRICE_LOW, 0);
+
+    // Check for buy entry signal
+    if (ema200 < Close[1] && ema32_close > Low[1] && High[0] > prevSwingHigh)
+    {
+        buySignal = true;
+        sellSignal = false;
+        prevSwingHigh = High[0];
+        Comment('Buy Entry Signal: Price action moved above EMA-200, dropped below EMA-32s, and broke previous swing high');
+    }
+
+    // Check for sell entry signal
+    if (ema200 > Close[1] && ema32_close < High[1] && Low[0] < prevSwingLow)
+    {
+        sellSignal = true;
+        buySignal = false;
+        prevSwingLow = Low[0];
+        Comment('Sell Entry Signal: Price action moved below EMA-200, rose above EMA-32s, and broke previous swing low');
+    }
+}
+
+//+------------------------------------------------------------------+
+//|                       Program Execution                          |
+//+------------------------------------------------------------------+
+void start()
+{
+    // Execute trading function
+    OnTick();
+}
+
+//+------------------------------------------------------------------+
+//|                          Program End                             |
+//+------------------------------------------------------------------+
